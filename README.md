@@ -33,7 +33,9 @@ To install the SDK, you can use Swift Package Manager(SPM) :
 
 The Swift Package Manager is a tool that simplifies the distribution and management of Swift code, seamlessly integrating with Xcode and the Swift build system to streamline downloading, compiling, and linking dependencies.
 
-Here’s a quick guide for adding our package to your Xcode project [Step-by-step guide on using Swift Package Manager in Xcode](https://developer.apple.com/documentation/xcode/adding-package-dependencies-to-your-app). To get started, use the repository URL in Xcode's search field: "https://github.com/FastPix/iOS-Uploads.git".
+Here’s a quick guide for adding our package to your Xcode project [Step-by-step guide on using Swift Package Manager in Xcode](https://developer.apple.com/documentation/xcode/adding-package-dependencies-to-your-app). 
+
+To get started, use the repository URL in Xcode's search field: "https://github.com/FastPix/iOS-Uploads.git".
  
 ## Basic Usage
 
