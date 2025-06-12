@@ -3,7 +3,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.1.0]
+## [1.0.0]
 
 ### Features
   - **Chunking**: Files are automatically split into chunks (configurable, default size is 16MB/chunk).
