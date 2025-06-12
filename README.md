@@ -90,16 +90,9 @@ The upload function accepts the following parameters:
 | `maxFileBytesKB`       | `number` (in KB)                    | Optional | Maximum allowed file size for upload, specified in kilobytes. Files exceeding this limit will be rejected.                                                    |
 | `maxRetryAttempt` | `number`                            | Optional | Number of retry attempts per chunk in case of failure. Default is `5`.                                                                                        |                                    
 
-
 # References 
 
-[FastPix Homepage](https://www.fastpix.io/)
-[Fastpix Dashboard](https://dashboard.fastpix.io/login?redirect=https://dashboard.fastpix.io/)
-[Uploads github](https://github.com/FastPix/iOS-Uploads.git)
-[API Reference](https://docs.fastpix.io/reference/on-demand-overview)
-
-# Development
-
-## Maturity
-
-This SDK is currently in beta, and breaking changes may occur between versions even without a major version update. To avoid unexpected issues, we recommend pinning your dependency to a specific version. This ensures consistent behavior unless you intentionally update to a newer release.#Documentation 
+- [Homepage](https://www.fastpix.io/)
+- [Dashboard](https://dashboard.fastpix.io/login?redirect=https://dashboard.fastpix.io/)
+- [GitHub](https://github.com/FastPix/iOS-Uploads.git)
+- [API Reference](https://docs.fastpix.io/reference/on-demand-overview)
