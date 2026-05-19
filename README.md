@@ -94,7 +94,11 @@ The upload function accepts the following parameters:
 
 # References 
 
-- [Homepage](https://www.fastpix.io/)
-- [Dashboard](https://dashboard.fastpix.io/login?redirect=https://dashboard.fastpix.io/)
+- [Homepage](https://www.fastpix.com/)
+- [Dashboard](https://dashboard.fastpix.com/login?redirect=https://dashboard.fastpix.io/)
 - [GitHub](https://github.com/FastPix/iOS-Uploads.git)
-- [API Reference](https://docs.fastpix.io/reference/on-demand-overview)
+- [API Reference](https://fastpix.com/docs/video-on-demand-api/upload-and-import-videos/direct-upload-video-media)
+
+# Detailed Usage:
+ 
+For more detailed steps and advanced usage, please refer to the official [FastPix Documentation](https://fastpix.com/docs/upload-videos/upload-videos-from-device#uploading-large-media-files).
