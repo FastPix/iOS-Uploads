@@ -18,8 +18,10 @@ let defaultChunkSizeKB: Int = 16 * 1024
 
 func calculateChunkSize(kbSize: Int?) -> Int {
     let sizeKB = (kbSize == nil || kbSize == 0) ? defaultChunkSizeKB : kbSize!
-    return sizeKB * 1024 
+    return sizeKB * 1024
 }
+
+// MARK: - VideoChunkProcessor
 
 public class VideoChunkProcessor {
     
@@ -37,19 +39,20 @@ public class VideoChunkProcessor {
     }
     
     func getChunk(chunkStart: Int, chunkEnd: Int) -> Data {
+        
         do {
-            if #available(iOS 13.0, *) {
-                try fileHandle.seek(toOffset: UInt64(chunkStart))
-            } else {
-                return Data()
-            }
-            
-            let sizeToRead = min(chunkEnd - chunkStart, fileSize - chunkStart)
-            
             if #available(iOS 13.4, *) {
-                return try fileHandle.read(upToCount: sizeToRead) ?? Data()
+                try fileHandle.seek(toOffset: UInt64(chunkStart))
+                let sizeToRead = min(chunkEnd - chunkStart, fileSize - chunkStart)
+                // `read(upToCount:)` returns non-optional `Data` on iOS 13.4+
+                // but the compiler on older SDKs may still see the old
+                // optional signature — use `?? Data()` to satisfy both.
+                return (try fileHandle.read(upToCount: sizeToRead)) ?? Data()
             } else {
-                return Data()
+                // Legacy path: synchronous readData (available since iOS 2)
+                fileHandle.seek(toFileOffset: UInt64(chunkStart))
+                let sizeToRead = min(chunkEnd - chunkStart, fileSize - chunkStart)
+                return fileHandle.readData(ofLength: sizeToRead)
             }
         } catch {
             return Data()
@@ -63,44 +66,53 @@ public class VideoChunkProcessor {
     deinit {
         if #available(iOS 13.0, *) {
             try? fileHandle.close()
+        } else {
+            fileHandle.closeFile()
         }
     }
 }
 
-public enum UploadEvent {
+// MARK: - UploadEvent
+
+public enum UploadEvent: Sendable {
     case chunkAttempt(chunkNumber: Int, totalChunks: Int)
     case chunkSuccess(chunkNumber: Int, totalChunks: Int)
-    case error(error: Error)
+    case error(error: any Error)
     case progress(progress: Float)
     case uploadsuccess
     case pause
     case resume
     case online
     case offline
-    case chunkAttemptFailure(chunkNumber: Int, totalChunks: Int, error: Error, attempt: Int)
+    case chunkAttemptFailure(chunkNumber: Int, totalChunks: Int, error: any Error, attempt: Int)
 }
 
-public protocol UploadsDelegate: AnyObject {
+// MARK: - Delegate protocols
+
+public protocol UploadsDelegate: AnyObject, Sendable {
     func uploads(_ uploads: Uploads, didEmit event: UploadEvent)
 }
 
-public protocol UploadProgressDelegate: AnyObject {
+public protocol UploadProgressDelegate: AnyObject, Sendable {
     func didUpdateProgressText(_ text: String)
 }
 
-public protocol UploadSDKErrorDelegate: AnyObject {
+public protocol UploadSDKErrorDelegate: AnyObject, Sendable {
     func uploadSDKDidFail(with error: String)
 }
 
+// MARK: - Uploads
+
 public class Uploads: NSObject, URLSessionDelegate, URLSessionTaskDelegate, URLSessionDataDelegate {
     
+    // MARK: Stored properties
     var videoFile: URL?
     var endpoint: String?
     var sessionURL: String?
     var customizedChunkSize: Int = defaultChunkSizeKB
     var chunkBytes: Int = defaultChunkSizeKB * 1024
-    var fileSize : Int = 0
-    var maxFileSize : Int = 0
+    var fileSize: Int = 0
+    var maxFileSize: Int = 0
     public var totalChunks: Int = 0
     var chunkStart: Int = 0
     var chunkEnd: Int = 0
@@ -112,10 +124,13 @@ public class Uploads: NSObject, URLSessionDelegate, URLSessionTaskDelegate, URLS
     var uploadURLS = [""]
     var prevSegmentStart: Date?
     var isUploadCompleted = false
-    var chunkProcessor : VideoChunkProcessor?
+    var chunkProcessor: VideoChunkProcessor?
+    
     public weak var delegate: UploadsDelegate?
     public weak var progressDelegate: UploadProgressDelegate?
+    
     public var errorDelegate: UploadSDKErrorDelegate?
+    
     var session: URLSession!
     public var progressHandler: ((Float) -> Void)?
     var isPaused: Bool = false
@@ -123,37 +138,48 @@ public class Uploads: NSObject, URLSessionDelegate, URLSessionTaskDelegate, URLS
     var isOffline: Bool = false
     var failedChunkRetries: Int = 0
     var activeUploadTask: URLSessionUploadTask?
-    var monitor :  NWPathMonitor?
+    
+    // NWPathMonitor — available iOS 12+
+    var monitor: NWPathMonitor?
     var consecutiveBackOffFailures = 0
     var maxLimitForBackOffFailures = 5
     var retryUpTo = 0
     
+    // MARK: Init
     public override init() {
         super.init()
         let configuration = URLSessionConfiguration.default
         self.session = URLSession(configuration: configuration, delegate: self, delegateQueue: nil)
-        self.monitor  = NWPathMonitor()
+        self.monitor = NWPathMonitor()
         self.startMonitoringNetwork()
     }
     
+    // MARK: - Emit helper
     private func emit(_ event: UploadEvent) {
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
             self.delegate?.uploads(self, didEmit: event)
         }
     }
     
-    public func uploadFile(file: URL, endpoint: String, chunkSizeKB: Int? = nil,
-                           maxRetryAttempt: Int? = nil, maxFileBytesKB: Int? = nil) {
+    // MARK: - Public upload entry-point
+    public func uploadFile(file: URL,
+                           endpoint: String,
+                           chunkSizeKB: Int? = nil,
+                           maxRetryAttempt: Int? = nil,
+                           maxFileBytesKB: Int? = nil) {
         self.videoFile = file
         self.endpoint = endpoint
-        self.customizedChunkSize = chunkSizeKB ?? defaultChunkSizeKB
+        self.customizedChunkSize = (chunkSizeKB == nil || chunkSizeKB == 0) ? defaultChunkSizeKB : chunkSizeKB!
         self.chunkBytes = calculateChunkSize(kbSize: chunkSizeKB)
         self.fileSize = Uploads.getFileSize(at: file)
         self.maxFileSize = maxFileBytesKB ?? 0
+        
         guard self.chunkBytes > 0 else {
             self.errorDelegate?.uploadSDKDidFail(with: "Validation failed: The chunk-size must be 5120 KB or more.")
             return
         }
+        
         self.totalChunks = Int(ceil(Double(fileSize) / Double(self.chunkBytes)))
         self.chunkStart = 0
         self.chunkEnd = self.chunkBytes
@@ -164,25 +190,42 @@ public class Uploads: NSObject, URLSessionDelegate, URLSessionTaskDelegate, URLS
         self.isOffline = false
         self.isUploadCompleted = false
         self.maxChunkRetries = maxRetryAttempt ?? 5
-        self.chunkProcessor = VideoChunkProcessor(fileURL: file)!
-        self.monitor  = NWPathMonitor()
+        
+        guard let processor = VideoChunkProcessor(fileURL: file) else {
+            self.errorDelegate?.uploadSDKDidFail(with: "Validation failed: Could not open file for reading.")
+            return
+        }
+        self.chunkProcessor = processor
+        
+        self.monitor = NWPathMonitor()
         self.startMonitoringNetwork()
-        NotificationCenter.default.addObserver(self, selector: #selector(appDidBecomeActive), name: UIApplication.didBecomeActiveNotification, object: nil)
+        
+        // Use UIApplication notifications safely — they must be observed on
+        // the main thread. `addObserver` is main-thread safe but wrapping in
+        // async guarantees it when `uploadFile` is called off-main.
+        DispatchQueue.main.async {
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(self.appDidBecomeActive),
+                name: UIApplication.didBecomeActiveNotification,
+                object: nil
+            )
+        }
+        
         do {
             try (
-                endpoint: endpoint,
-                streamFile: videoFile,
-                customizedChunkSize: customizedChunkSize, maxFileBytes: 0
+                validateUserInput(endpoint: endpoint, streamFile: videoFile, customizedChunkSize: customizedChunkSize, maxFileBytes: 0)
             )
             self.requestChunk()
         } catch let error as UploadValidationError {
             self.errorDelegate?.uploadSDKDidFail(with: "Validation failed: \(error.localizedDescription)")
             emit(.error(error: error))
-            
         } catch {
             emit(.error(error: error))
         }
     }
+    
+    // MARK: - Validation Error
     
     enum UploadValidationError: Error, LocalizedError {
         case invalidEndpoint
@@ -206,21 +249,25 @@ public class Uploads: NSObject, URLSessionDelegate, URLSessionTaskDelegate, URLS
             }
         }
     }
-
-    func validateUserInput(endpoint: Any?, streamFile: URL?, customizedChunkSize: Int, maxFileBytes: Int) throws {
+    
+    // MARK: - Validate user input
+    
+    func validateUserInput(endpoint: Any?,
+                           streamFile: URL?,
+                           customizedChunkSize: Int?,
+                           maxFileBytes: Int) throws {
         
-        // Endpoint must be a String or async closure (simulate here with a basic check)
-        if !(endpoint is String || endpoint is () async throws -> String) {
+        guard endpoint is String else {
             throw UploadValidationError.invalidEndpoint
         }
         
-        // Check if file exists
-        guard let streamFile = streamFile, FileManager.default.fileExists(atPath: streamFile.path) else {
+        guard let streamFile = streamFile,
+              FileManager.default.fileExists(atPath: streamFile.path) else {
             throw UploadValidationError.invalidFile
         }
         
         // Chunk size validation
-        if self.customizedChunkSize < 5 {
+        if self.customizedChunkSize < 5120 {
             throw UploadValidationError.chunkSizeTooSmall
         }
         
@@ -228,11 +275,10 @@ public class Uploads: NSObject, URLSessionDelegate, URLSessionTaskDelegate, URLS
             throw UploadValidationError.chunkSizeTooSmall
         }
         
-        if self.customizedChunkSize > 500 {
+        if self.customizedChunkSize > 512000 {
             throw UploadValidationError.chunkSizeTooLarge
         }
         
-        // File size validation
         let fileAttributes = try FileManager.default.attributesOfItem(atPath: streamFile.path)
         if let fileSize = fileAttributes[.size] as? Int {
             if maxFileBytes > 0 && maxFileBytes < fileSize {
@@ -243,7 +289,9 @@ public class Uploads: NSObject, URLSessionDelegate, URLSessionTaskDelegate, URLS
         }
     }
     
+    // MARK: - File size helper
     private static func getFileSize(at url: URL) -> Int {
+        
         do {
             let attr = try FileManager.default.attributesOfItem(atPath: url.path)
             return attr[.size] as? Int ?? 0
@@ -252,133 +300,114 @@ public class Uploads: NSObject, URLSessionDelegate, URLSessionTaskDelegate, URLS
         }
     }
     
+    // MARK: - Chunk helpers
     public func getVideoChunk(chunkStart: Int, chunkEnd: Int) -> Data? {
         return self.chunkProcessor?.getChunk(chunkStart: chunkStart, chunkEnd: chunkEnd)
     }
     
     public func updateChunkRange() {
-        self.chunkStart = ((self.chunkOffset - 1) * self.chunkBytes)
-        let potentialEnd = (self.chunkOffset * self.chunkBytes)
+        self.chunkStart = (self.chunkOffset - 1) * self.chunkBytes
+        let potentialEnd = self.chunkOffset * self.chunkBytes
         let fileSize = Uploads.getFileSize(at: self.videoFile!)
         self.chunkEnd = min(potentialEnd, fileSize)
     }
     
     public func requestChunk() {
         guard self.totalChunks > 0,
-              (self.chunkOffset - 1) < self.totalChunks else {
-            return
-        }
+              (self.chunkOffset - 1) < self.totalChunks else { return }
         
         let chunkStart = (self.chunkOffset == 0) ? 0 : self.chunkStart
         let chunkEnd = self.chunkEnd
         
         autoreleasepool {
-            let currentChunk = self.getVideoChunk(chunkStart: chunkStart, chunkEnd: chunkEnd)
+            guard let currentChunk = self.getVideoChunk(chunkStart: chunkStart, chunkEnd: chunkEnd) else {
+                return
+            }
             self.prevSegmentStart = Date()
             self.emit(.chunkAttempt(chunkNumber: self.chunkOffset, totalChunks: self.totalChunks))
             let progressText = "  Uploading \(self.chunkOffset) of \(self.totalChunks)"
             self.progressDelegate?.didUpdateProgressText(progressText)
-            self.submitHttpRequest(method: "PUT", urlString: self.endpoint ?? "", body: currentChunk!)
+            self.submitHttpRequest(method: "PUT", urlString: self.endpoint ?? "", body: currentChunk)
         }
     }
     
+    // MARK: - HTTP request
     func submitHttpRequest(method: String, urlString: String, body: Data) {
+        guard let url = URL(string: urlString) else { return }
         
-        guard let url = URL(string: urlString) else {
-            return
-        }
-        
-        var chunkEndRange = min(self.chunkStart + self.chunkBytes - 1, self.fileSize - 1)
+        let chunkEndRange = min(self.chunkStart + self.chunkBytes - 1, self.fileSize - 1)
         
         var request = URLRequest(url: url)
         request.httpMethod = method
         request.setValue(videoFile?.pathExtension.lowercased(), forHTTPHeaderField: "Content-Type")
-        request.setValue("bytes \(self.chunkStart)-\(chunkEndRange)/\(self.fileSize)", forHTTPHeaderField: "Content-Range")
+        request.setValue("bytes \(self.chunkStart)-\(chunkEndRange)/\(self.fileSize)",
+                         forHTTPHeaderField: "Content-Range")
         
-        let task = self.session.uploadTask(with: request, from: body) { data, response, error in
+        // Capture values needed inside the completion handler to avoid
+        // implicitly capturing `self` as Sendable.
+        let capturedChunkEndRange = chunkEndRange
+        
+        let task = self.session.uploadTask(with: request, from: body) { [weak self] data, response, error in
+            guard let self = self else { return }
+            
             guard let httpResponse = response as? HTTPURLResponse else {
                 self.emit(.error(error: NSError(domain: "NoHTTPResponse", code: -1, userInfo: nil)))
                 return
             }
-            
-            var Range : String = ""
             
             if let error = error {
                 self.emit(.chunkAttemptFailure(
                     chunkNumber: self.chunkOffset + 1,
                     totalChunks: self.totalChunks,
                     error: error,
-                    attempt: self.totalChunkRetries + 1 ))
-                if (self.totalChunkRetries < self.maxChunkRetries && !self.isPaused && !self.isAborted && !self.isOffline && self.totalChunks > 0 && self.uploadURLS.count > 0) {
+                    attempt: self.totalChunkRetries + 1
+                ))
+                if self.totalChunkRetries < self.maxChunkRetries &&
+                    !self.isPaused && !self.isAborted && !self.isOffline &&
+                    self.totalChunks > 0 && self.uploadURLS.count > 0 {
                     self.validateChunkUpload()
                     self.totalChunkRetries += 1
-                    return
                 } else {
                     self.emit(.error(error: error))
                     self.errorDelegate?.uploadSDKDidFail(with: error.localizedDescription)
-                    return
+                }
+                return
+            }
+            
+            // Parse Range header
+            var uploadedBytes: Int = 0
+            if let headers = (response as? HTTPURLResponse)?.allHeaderFields,
+               let rangeHeader = headers["Range"] as? String {
+                let byteRange = rangeHeader.replacingOccurrences(of: "bytes=", with: "")
+                let parts = byteRange.split(separator: "-")
+                if parts.count == 2 {
+                    uploadedBytes = Int(parts[1]) ?? 0
                 }
             }
-                        
-            if let httpResponse = response as? HTTPURLResponse {
-                let headers = httpResponse.allHeaderFields
-                
-                Range = headers["Range"] as? String ?? ""
-            }
-            
-            let byteRange = Range.replacingOccurrences(of: "bytes=", with: "")
-            
-            // Split into start and end
-            let parts = byteRange.split(separator: "-")
-            var uploadedBytes : Int = 0
-            if parts.count == 2 {
-                let startByte = Int(parts[0])
-                uploadedBytes = Int(parts[1]) ?? 0
-            }
-            
-            var response = 429
             
             if httpResponse.statusCode == 308 {
-                if uploadedBytes ?? 0 < chunkEndRange {
+                if uploadedBytes < capturedChunkEndRange {
                     self.requestChunk()
-                } else if uploadedBytes == chunkEndRange {
-                    self.emit(.chunkSuccess(chunkNumber: self.chunkOffset, totalChunks: self.totalChunks))
-                    let progressText = "  Successfully Uploaded \(self.chunkOffset) of \(self.totalChunks)"
-                    self.progressDelegate?.didUpdateProgressText(progressText)
-                    self.totalChunkRetries = 0
-                    self.chunkOffset += 1
-                    self.updateChunkRange()
-                    self.validateChunkUpload()
+                } else if uploadedBytes == capturedChunkEndRange {
+                    self.handleChunkSuccess()
                 }
             } else if [200, 201, 204, 206].contains(httpResponse.statusCode) {
                 self.consecutiveBackOffFailures = 0
-                self.emit(.chunkSuccess(chunkNumber: self.chunkOffset, totalChunks: self.totalChunks))
-                let progressText = "  Successfully Uploaded \(self.chunkOffset) of \(self.totalChunks)"
-                self.progressDelegate?.didUpdateProgressText(progressText)
-                self.totalChunkRetries = 0
-                self.chunkOffset += 1
-                self.updateChunkRange()
-                self.validateChunkUpload()
-            } else if [408,429,501,502,503].contains(httpResponse.statusCode) {
-                
-                self.errorDelegate?.uploadSDKDidFail(with: "Upload Failed with response code 400")
-
+                self.handleChunkSuccess()
+            } else if [408, 429, 501, 502, 503].contains(httpResponse.statusCode) {
+                self.errorDelegate?.uploadSDKDidFail(with: "Upload Failed with response code \(httpResponse.statusCode)")
                 self.consecutiveBackOffFailures += 1
                 
                 if self.consecutiveBackOffFailures >= self.maxLimitForBackOffFailures {
                     return
-                } else {
-                    self.consecutiveBackOffFailures = 0
                 }
                 
                 let baseDelay: Double = 2000
                 let maxDelay: Double = 5000
                 let randomJitter = Double.random(in: 0..<1000)
-                
                 let delay = min(baseDelay * pow(2.0, Double(self.consecutiveBackOffFailures)) + randomJitter, maxDelay)
-                
                 let delayInSeconds = delay / 1000.0
-                            
+                
                 DispatchQueue.main.asyncAfter(deadline: .now() + floor(delayInSeconds)) { [weak self] in
                     self?.requestChunk()
                 }
@@ -388,20 +417,32 @@ public class Uploads: NSObject, URLSessionDelegate, URLSessionTaskDelegate, URLS
         task.resume()
     }
     
+    private func handleChunkSuccess() {
+        self.emit(.chunkSuccess(chunkNumber: self.chunkOffset, totalChunks: self.totalChunks))
+        let progressText = "  Successfully Uploaded \(self.chunkOffset) of \(self.totalChunks)"
+        self.progressDelegate?.didUpdateProgressText(progressText)
+        self.totalChunkRetries = 0
+        self.chunkOffset += 1
+        self.updateChunkRange()
+        self.validateChunkUpload()
+    }
+    
+    // MARK: - Chunk validation / completion
     public func validateChunkUpload() {
         if self.totalChunks == (self.chunkOffset - 1) {
-            if (self.totalChunks > 1) {
-                //                self.requestChunk()
-            } else {
+            if self.totalChunks <= 1 {
                 self.emit(.uploadsuccess)
             }
+            // Multi-chunk final state — uploadsuccess emitted when server
+            // confirms the last chunk via 200/201/204/206.
         } else {
             self.requestChunk()
         }
     }
     
+    // MARK: - Abort / retry
     public func abort() {
-        if (self.activeUploadTask != nil && self.totalChunks > 0 && self.uploadURLS.count > 0) {
+        if self.activeUploadTask != nil && self.totalChunks > 0 && self.uploadURLS.count > 0 {
             self.activeUploadTask?.cancel()
             self.activeUploadTask = nil
             self.isAborted = true
@@ -411,11 +452,8 @@ public class Uploads: NSObject, URLSessionDelegate, URLSessionTaskDelegate, URLS
     }
     
     public func retryUpload() {
-        if (self.activeUploadTask != nil) {
-            self.activeUploadTask?.cancel()
-            self.activeUploadTask = nil
-        }
-        
+        self.activeUploadTask?.cancel()
+        self.activeUploadTask = nil
         self.uploadURLS.removeAll()
         self.uploadID = ""
         self.objectName = ""
@@ -429,20 +467,19 @@ public class Uploads: NSObject, URLSessionDelegate, URLSessionTaskDelegate, URLS
         self.isUploadCompleted = false
     }
     
+    // MARK: - Pause / Resume
     public func pause() {
-        if  !self.isPaused &&
-                !self.isOffline &&
-                !self.isAborted &&
-                self.totalChunkRetries < self.maxChunkRetries &&
-                self.totalChunks > 0 &&
-                self.uploadURLS.count > 0 {
+        if !self.isPaused &&
+            !self.isOffline &&
+            !self.isAborted &&
+            self.totalChunkRetries < self.maxChunkRetries &&
+            self.totalChunks > 0 &&
+            self.uploadURLS.count > 0 {
             
             self.isPaused = true
             self.emit(.pause)
-            if (activeUploadTask != nil) {
-                activeUploadTask?.cancel()
-                activeUploadTask = nil
-            }
+            activeUploadTask?.cancel()
+            activeUploadTask = nil
         }
     }
     
@@ -456,45 +493,45 @@ public class Uploads: NSObject, URLSessionDelegate, URLSessionTaskDelegate, URLS
             
             self.isPaused = false
             self.emit(.resume)
-            if self.totalChunks != self.chunkOffset {
-                requestChunk()
-            }
-            if self.totalChunks == 1 {
+            if self.totalChunks != self.chunkOffset || self.totalChunks == 1 {
                 requestChunk()
             }
         }
     }
     
+    // MARK: - Network monitoring
     public func startMonitoringNetwork() {
         self.monitor?.pathUpdateHandler = { [weak self] path in
             guard let self = self else { return }
             
             if path.status == .satisfied {
-                
-                if self.isOffline && self.totalChunkRetries < self.maxChunkRetries && !self.isAborted &&
-                    self.totalChunks > 0 && self.uploadURLS.count > 0 {
+                if self.isOffline &&
+                    self.totalChunkRetries < self.maxChunkRetries &&
+                    !self.isAborted &&
+                    self.totalChunks > 0 &&
+                    self.uploadURLS.count > 0 {
+                    
                     self.isOffline = false
                     self.emit(.online)
-                    errorDelegate?.uploadSDKDidFail(with: "Network is Online")
-                    if (!self.isUploadCompleted) {
-                        if (!self.isPaused) {
-                            self.validateChunkUpload()
-                        }
+                    self.errorDelegate?.uploadSDKDidFail(with: "Network is Online")
+                    if !self.isUploadCompleted && !self.isPaused {
+                        self.validateChunkUpload()
                     }
                 }
-                
             } else {
                 self.isOffline = true
                 self.emit(.offline)
-                errorDelegate?.uploadSDKDidFail(with: "Network is Offline")
-                if self.totalChunks != self.chunkOffset && !self.isUploadCompleted && !self.isAborted &&
-                    self.totalChunkRetries < self.maxChunkRetries && self.totalChunks > 0 &&
+                self.errorDelegate?.uploadSDKDidFail(with: "Network is Offline")
+                
+                if self.totalChunks != self.chunkOffset &&
+                    !self.isUploadCompleted &&
+                    !self.isAborted &&
+                    self.totalChunkRetries < self.maxChunkRetries &&
+                    self.totalChunks > 0 &&
                     self.uploadURLS.count > 0 {
                     
-                    if self.activeUploadTask != nil {
-                        self.activeUploadTask?.cancel()
-                        self.activeUploadTask = nil
-                    }
+                    self.activeUploadTask?.cancel()
+                    self.activeUploadTask = nil
                 }
             }
         }
@@ -507,7 +544,9 @@ public class Uploads: NSObject, URLSessionDelegate, URLSessionTaskDelegate, URLS
         startMonitoringNetwork()
     }
     
-    public func urlSession(_ session: URLSession, task: URLSessionTask,
+    // MARK: - URLSession progress delegate
+    public func urlSession(_ session: URLSession,
+                           task: URLSessionTask,
                            didSendBodyData bytesSent: Int64,
                            totalBytesSent: Int64,
                            totalBytesExpectedToSend: Int64) {
@@ -519,7 +558,7 @@ public class Uploads: NSObject, URLSessionDelegate, URLSessionTaskDelegate, URLS
         let currentChunkProgress = Float(totalBytesSent) / Float(totalBytesExpectedToSend)
         let chunkProgress = currentChunkProgress * progressPerChunk
         let overallProgress = min(successfulProgress + chunkProgress, 1.0)
-        let percentageProgress = overallProgress * 100
+        
         progressHandler?(overallProgress)
         self.emit(.progress(progress: overallProgress))
     }
