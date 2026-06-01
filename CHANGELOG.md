@@ -3,6 +3,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.3]
+
+### Changed
+- Code standardization updates applied across the SDK to align with best practices and strengthen overall stability.
+
 ## [1.0.2]
 
 ### Compatibility
@@ -54,3 +59,4 @@ All notable changes to this project will be documented in this file.
 - Added retry mechanism with exponential backoff for GCS upload failures based on retryable status codes.
 - Enabled support for user-provided signed URLs for resumable uploads with externally generated session URIs.
 - Updated the API endpoint from `https://v1.fastpix.io/on-demand/uploads` to `https://api.fastpix.io/v1/on-demand/upload`.
+

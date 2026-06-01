@@ -257,6 +257,8 @@ public class Uploads: NSObject, URLSessionDelegate, URLSessionTaskDelegate, URLS
                            customizedChunkSize: Int?,
                            maxFileBytes: Int) throws {
         
+        _ = customizedChunkSize
+        
         guard endpoint is String else {
             throw UploadValidationError.invalidEndpoint
         }
@@ -550,6 +552,9 @@ public class Uploads: NSObject, URLSessionDelegate, URLSessionTaskDelegate, URLS
                            didSendBodyData bytesSent: Int64,
                            totalBytesSent: Int64,
                            totalBytesExpectedToSend: Int64) {
+        _ = session
+        _ = task
+        _ = bytesSent
         
         let remainingChunks = totalChunks - (chunkOffset - 1)
         let progressChunkSize = fileSize - chunkStart
@@ -563,3 +568,4 @@ public class Uploads: NSObject, URLSessionDelegate, URLSessionTaskDelegate, URLS
         self.emit(.progress(progress: overallProgress))
     }
 }
+
