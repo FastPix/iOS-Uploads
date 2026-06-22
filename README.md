@@ -21,9 +21,9 @@ This SDK is designed specifically for use with FastPix and is not suitable for g
  
 To get started with SDK, you will need a signed URL.
  
-To make API requests, you'll need a valid **Access Token** and **Secret Key**. See the [Basic Authentication Guide](https://docs.fastpix.io/docs/basic-authentication) for details on retrieving these credentials.
+To make API requests, you'll need a valid **Access Token** and **Secret Key**. See the [Basic Authentication Guide](https://fastpix.com/docs/getting-started/activate-your-account#authentication-format) for details on retrieving these credentials.
  
-Once you have your credentials, use the [Upload media from device](https://docs.fastpix.io/reference/direct-upload-video-media) API to generate a signed URL for uploading media.
+Once you have your credentials, use the [Upload media from device](https://fastpix.com/docs/video-on-demand-api/upload-and-import-videos/direct-upload-video-media) API to generate a signed URL for uploading media.
 
 ## Installation
 
@@ -95,7 +95,7 @@ The upload function accepts the following parameters:
 # References 
 
 - [Homepage](https://www.fastpix.com/)
-- [Dashboard](https://dashboard.fastpix.com/login?redirect=https://dashboard.fastpix.io/)
+- [Dashboard](https://dashboard.fastpix.com)
 - [GitHub](https://github.com/FastPix/iOS-Uploads.git)
 - [API Reference](https://fastpix.com/docs/video-on-demand-api/upload-and-import-videos/direct-upload-video-media)
 
