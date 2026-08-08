@@ -1,0 +1,295 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		1B0000000000000000000001 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000000000000000000001 /* AppDelegate.swift */; };
+		1B0000000000000000000002 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000000000000000000002 /* SceneDelegate.swift */; };
+		1B0000000000000000000003 /* UploadViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000000000000000000003 /* UploadViewController.swift */; };
+		1B0000000000000000000005 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1A0000000000000000000007 /* Assets.xcassets */; };
+		1B0000000000000000000010 /* fp-swift-upload-sdk in Frameworks */ = {isa = PBXBuildFile; productRef = 7A0000000000000000000002 /* fp-swift-upload-sdk */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		1A0000000000000000000001 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		1A0000000000000000000002 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
+		1A0000000000000000000003 /* UploadViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadViewController.swift; sourceTree = "<group>"; };
+		1A0000000000000000000004 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		1A0000000000000000000007 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		1A0000000000000000000005 /* UploadExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = UploadExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		3A0000000000000000000002 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1B0000000000000000000010 /* fp-swift-upload-sdk in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		2A0000000000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				2A0000000000000000000002 /* UploadExample */,
+				2A0000000000000000000003 /* Products */,
+				2A0000000000000000000004 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		2A0000000000000000000002 /* UploadExample */ = {
+			isa = PBXGroup;
+			children = (
+				1A0000000000000000000001 /* AppDelegate.swift */,
+				1A0000000000000000000002 /* SceneDelegate.swift */,
+				1A0000000000000000000003 /* UploadViewController.swift */,
+				1A0000000000000000000007 /* Assets.xcassets */,
+				1A0000000000000000000004 /* Info.plist */,
+			);
+			path = UploadExample;
+			sourceTree = "<group>";
+		};
+		2A0000000000000000000003 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				1A0000000000000000000005 /* UploadExample.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		2A0000000000000000000004 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		4A0000000000000000000001 /* UploadExample */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5A0000000000000000000002 /* Build configuration list for PBXNativeTarget "UploadExample" */;
+			buildPhases = (
+				3A0000000000000000000001 /* Sources */,
+				3A0000000000000000000002 /* Frameworks */,
+				3A0000000000000000000003 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = UploadExample;
+			packageProductDependencies = (
+				7A0000000000000000000002 /* fp-swift-upload-sdk */,
+			);
+			productName = UploadExample;
+			productReference = 1A0000000000000000000005 /* UploadExample.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		4A0000000000000000000002 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1620;
+				LastUpgradeCheck = 1620;
+				TargetAttributes = {
+					4A0000000000000000000001 = {
+						CreatedOnToolsVersion = 16.2;
+					};
+				};
+			};
+			buildConfigurationList = 5A0000000000000000000001 /* Build configuration list for PBXProject "UploadExample" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 2A0000000000000000000001;
+			packageReferences = (
+				7A0000000000000000000001 /* XCRemoteSwiftPackageReference "iOS-Uploads" */,
+			);
+			productRefGroup = 2A0000000000000000000003 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				4A0000000000000000000001 /* UploadExample */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		3A0000000000000000000003 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1B0000000000000000000005 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		3A0000000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1B0000000000000000000003 /* UploadViewController.swift in Sources */,
+				1B0000000000000000000001 /* AppDelegate.swift in Sources */,
+				1B0000000000000000000002 /* SceneDelegate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		6A0000000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		6A0000000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		6A0000000000000000000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = TRG6Q7877U;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = UploadExample/Info.plist;
+				INFOPLIST_KEY_UILaunchScreen_Generation = NO;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.fastpix.UploadExample;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		6A0000000000000000000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = TRG6Q7877U;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = UploadExample/Info.plist;
+				INFOPLIST_KEY_UILaunchScreen_Generation = NO;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.fastpix.UploadExample;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		5A0000000000000000000001 /* Build configuration list for PBXProject "UploadExample" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6A0000000000000000000001 /* Debug */,
+				6A0000000000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		5A0000000000000000000002 /* Build configuration list for PBXNativeTarget "UploadExample" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6A0000000000000000000003 /* Debug */,
+				6A0000000000000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		7A0000000000000000000001 /* XCRemoteSwiftPackageReference "iOS-Uploads" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/FastPix/iOS-Uploads.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		7A0000000000000000000002 /* fp-swift-upload-sdk */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7A0000000000000000000001 /* XCRemoteSwiftPackageReference "iOS-Uploads" */;
+			productName = "fp-swift-upload-sdk";
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 4A0000000000000000000002 /* Project object */;
+}
