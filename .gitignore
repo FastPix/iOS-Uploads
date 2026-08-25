@@ -1,0 +1,8 @@
+# Swift Package Manager / Xcode build output
+.build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+
+# Credentials — never commit real keys (see Secrets.example.swift)
+examples/swiftui/SwiftUIUploadExample/Secrets.swift
