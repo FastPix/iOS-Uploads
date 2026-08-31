@@ -1,123 +1,64 @@
-# FastPix iOS Uploads — Example App
+# FastPix iOS Uploads — UIKit example
 
-A minimal iOS (UIKit) app showing how to integrate the
-[FastPix iOS Uploads SDK](https://github.com/FastPix/iOS-Uploads) to
-chunk-upload a video to FastPix using a **signed upload URL**, with live
-progress and the full **pause / resume / abort** lifecycle.
+A minimal **UIKit** app that chunk-uploads a video to FastPix from a
+**signed upload URL** you paste in, with live progress and pause / resume / abort.
 
 ## Requirements
 
-- macOS with **Xcode 15 or later**
-- **iOS 14.0+** simulator or device
-- A **signed upload URL** from FastPix's
-  [Direct Upload API](https://docs.fastpix.io/docs/upload-videos-directly) —
-  create one from the [FastPix dashboard](https://dashboard.fastpix.com) or via
-  the API
-- (Device only) an Apple ID / signing team configured in Xcode
+- Xcode 15+
+- iOS 14+ simulator or device
+- A signed upload URL from the
+  [Direct Upload API](https://docs.fastpix.io/docs/upload-videos-directly)
 
-## How to run this app
+## Run it
 
-### 1. Get the project
+1. **Open the project:**
 
-If you cloned the SDK repo, the example lives in the `example/` folder:
+   ```bash
+   open examples/uikit/UploadExample.xcodeproj
+   ```
 
-```bash
-git clone https://github.com/FastPix/iOS-Uploads.git
-cd iOS-Uploads/example
-```
+   On first open, Xcode fetches the `fp-swift-upload-sdk` package — wait for it
+   to finish (or **File → Packages → Resolve Package Versions**).
 
-### 2. Open it in Xcode
+2. Pick the **UploadExample** scheme + a simulator (or your device, with a
+   signing team set under **Signing & Capabilities**), then **⌘R**.
 
-```bash
-open UploadExample.xcodeproj
-```
-
-Or launch Xcode → **File → Open…** → select `UploadExample.xcodeproj`.
-
-### 3. Let Swift Package Manager resolve dependencies
-
-On first open, Xcode automatically fetches the `fp-swift-upload-sdk` package.
-Wait until the progress spinner in the toolbar finishes. If it doesn't start,
-choose **File → Packages → Resolve Package Versions**.
-
-### 4. Pick a destination and run
-
-1. In the toolbar's scheme/destination selector, choose the **UploadExample**
-   scheme and a target:
-   - **Simulator** — e.g. *iPhone 15 Pro* (no signing needed).
-   - **Physical device** — select **Signing & Capabilities**, pick your **Team**
-     so Xcode provisions the app, then plug in / select the device.
-2. Press **⌘R** (or the ▶︎ Run button).
-
-### 5. Upload a video
-
-1. **Paste a signed upload URL** into the first card. Generate one from FastPix's
-   Direct Upload API — it's a pre-authorized `PUT` URL the SDK uploads chunks to.
-2. Tap **Choose Video…** and pick a clip from the library (no photo-library
-   permission prompt — it uses the system `PHPicker`).
-3. Tap **Start Upload**. Watch the **Progress** card climb to 100% and the
-   **Event Log** stream each chunk. Use **Pause / Resume / Abort** at any time.
-4. Confirm the asset appears in your
-   [FastPix dashboard](https://dashboard.fastpix.com) once the upload completes.
-
-### Troubleshooting
-
-- **"Failed to install" on a device** — clean with **Product → Clean Build
-  Folder (⇧⌘K)** and run again. On the first install, trust the developer
-  profile under **Settings → General → VPN & Device Management** on the device.
-- **Package resolution errors** — **File → Packages → Reset Package Caches**,
-  then resolve again.
-- **Upload fails immediately** — the signed URL may be expired or malformed.
-  Generate a fresh one and paste the full `PUT` URL.
-
-## App structure
-
-- `UploadViewController` — the single screen: paste URL, pick video, start the
-  upload, and observe progress + lifecycle events via the SDK delegates.
-- `AppDelegate` / `SceneDelegate` — standard programmatic UIKit bootstrap (no
-  storyboards).
+3. Paste a signed upload URL, tap **Choose Video…**, then **Start Upload**.
+   Watch progress and the event log; use **Pause / Resume / Abort**.
 
 ## How the integration works
 
 ```swift
 import fp_swift_upload_sdk
 
-// Keep a strong reference for the whole upload session.
-private let uploader = Uploads()
+let uploader = Uploads()
+uploader.delegate = self          // UploadsDelegate — progress + lifecycle events
 
-// Observe lifecycle, progress-text, and error callbacks.
-uploader.delegate = self          // UploadsDelegate
-uploader.progressDelegate = self  // UploadProgressDelegate
-uploader.errorDelegate = self     // UploadSDKErrorDelegate
-
-// Start a chunked upload. chunkSizeKB is optional (defaults to 16 MB).
+// Start a chunked upload (chunkSizeKB optional, defaults to 16 MB).
 uploader.uploadFile(file: localVideoURL, endpoint: signedUploadURL)
 
-// Control the in-flight upload at any time.
-uploader.pause()
-uploader.resume()
-uploader.abort()
+uploader.pause(); uploader.resume(); uploader.abort()
 ```
-
-Handle events from the `UploadsDelegate`:
 
 ```swift
 func uploads(_ uploads: Uploads, didEmit event: UploadEvent) {
     switch event {
-    case .progress(let fraction):                 // 0.0 … 1.0
-        progressView.setProgress(fraction, animated: true)
-    case .chunkSuccess(let n, let total):
-        print("uploaded chunk \(n)/\(total)")
-    case .uploadsuccess:
-        print("done 🎉")
-    case .error(let error):
-        print("failed: \(error.localizedDescription)")
-    default:
-        break
+    case .progress(let fraction):            print("\(Int(fraction * 100))%")
+    case .uploadsuccess:                      print("done 🎉")
+    case .error(let error):                   print("failed: \(error)")
+    default:                                  break
     }
 }
 ```
 
-See the
-[official FastPix documentation](https://docs.fastpix.io/docs/upload-videos-directly)
-for creating signed upload URLs and the full SDK API.
+## Troubleshooting
+
+- **Package won't resolve / "couldn't resolve fp-swift-upload-sdk"** —
+  **File → Packages → Reset Package Caches**, then **Resolve Package Versions**
+  (needs internet; it fetches from GitHub).
+- **"Failed to install" on a device** — **Product → Clean Build Folder (⇧⌘K)**,
+  run again, and trust the developer profile under **Settings → General →
+  VPN & Device Management**.
+- **Upload fails immediately** — the signed URL is likely expired or malformed;
+  generate a fresh one.

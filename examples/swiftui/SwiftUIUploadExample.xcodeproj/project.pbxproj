@@ -127,7 +127,7 @@
 			);
 			mainGroup = 2A0000000000000000000001;
 			packageReferences = (
-				7A0000000000000000000001 /* XCLocalSwiftPackageReference "iOS-Uploads" */,
+				7A0000000000000000000001 /* XCRemoteSwiftPackageReference "iOS-Uploads" */,
 			);
 			productRefGroup = 2A0000000000000000000003 /* Products */;
 			projectDirPath = "";
@@ -286,16 +286,21 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCLocalSwiftPackageReference section */
-		7A0000000000000000000001 /* XCLocalSwiftPackageReference "iOS-Uploads" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = ../..;
+/* Begin XCRemoteSwiftPackageReference section */
+		7A0000000000000000000001 /* XCRemoteSwiftPackageReference "iOS-Uploads" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/FastPix/iOS-Uploads.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
 		};
-/* End XCLocalSwiftPackageReference section */
+/* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
 		7A0000000000000000000002 /* fp-swift-upload-sdk */ = {
 			isa = XCSwiftPackageProductDependency;
+			package = 7A0000000000000000000001 /* XCRemoteSwiftPackageReference "iOS-Uploads" */;
 			productName = "fp-swift-upload-sdk";
 		};
 /* End XCSwiftPackageProductDependency section */
